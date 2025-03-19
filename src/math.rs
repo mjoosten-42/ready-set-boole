@@ -1,4 +1,4 @@
-pub fn adder(a: u32, b: u32) -> u32 {
+fn adder(a: u32, b: u32) -> u32 {
     let mut carry = a & b;
     let mut res = a ^ b;
 
@@ -12,7 +12,7 @@ pub fn adder(a: u32, b: u32) -> u32 {
     res
 }
 
-pub fn multiplier(a: u32, b: u32) -> u32 {
+fn multiplier(a: u32, b: u32) -> u32 {
     let mut res = 0;
 
     for i in 0..u32::BITS {
@@ -44,7 +44,7 @@ mod tests {
     }
 
     #[test]
-    fn test() {
+    fn rand() {
         let mut rng = rand::rng();
 
         for _ in 0..100000 {

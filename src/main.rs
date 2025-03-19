@@ -1,12 +1,10 @@
 mod math;
+mod gray;
+mod rpn;
 
 use std::fmt::Binary;
 
-use crate::math::multiplier;
-
-fn main() {
-    multiplier(1, 1);
-}
+fn main() { }
 
 pub fn bin(s: &str, n: impl Binary) {
     println!("{s:<6}: {n:032b}");
