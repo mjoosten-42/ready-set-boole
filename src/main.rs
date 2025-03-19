@@ -1,7 +1,13 @@
-mod adder;
+mod math;
 
-use crate::adder::adder;
+use std::fmt::Binary;
+
+use crate::math::multiplier;
 
 fn main() {
-    adder(1, 1);
+    multiplier(1, 1);
+}
+
+pub fn bin(s: &str, n: impl Binary) {
+    println!("{s:<6}: {n:032b}");
 }
