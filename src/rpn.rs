@@ -1,12 +1,84 @@
-use std::iter::repeat;
+use itertools::Itertools;
+use std::iter::{once, repeat};
 
 pub fn eval_formula(formula: &str) -> bool {
     Node::parse(formula).evaluate()
 }
 
 pub fn print_truth_table(formula: &str) {
+    let variables: String = formula
+        .chars()
+        .filter(char::is_ascii_uppercase)
+        .unique()
+        .rev()
+        .collect();
 
+    let columns = "|".repeat(variables.len() + 2);
+
+    println!(
+        "{}",
+        Itertools::intersperse(
+            columns
+                .chars()
+                .interleave(variables.chars().rev().chain(once('='))),
+            ' '
+        )
+        .collect::<String>()
+    );
+
+    println!(
+        "{}",
+        Itertools::intersperse(Itertools::intersperse(columns.chars(), '-'), '-')
+            .collect::<String>()
+    );
+
+    for i in 0..(1 << variables.len()) {
+        let formula: String = formula.chars().map(|c| vtob(c, i, &variables)).collect();
+
+        println!(
+            "{}",
+            variables
+                .chars()
+                .rev()
+                .chain(once(match eval_formula(&formula) {
+                    false => '0',
+                    true => '1',
+                }))
+                .fold(String::from("|"), |acc, c| format!(
+                    "{acc} {} |",
+                    vtob(c, i, &variables)
+                ))
+        );
+    }
+}
+
+pub fn negation_normal_form(formula: &str) -> String {
+    let mut root = Node::parse(formula);
+
+    while !root.is_nnf() {
+        root.print();
+        root.elim_dbl_neg();
+
+        break;
+    }
     
+    root.print();
+
+    root.formula()
+}
+
+fn vtob(c: char, n: u32, variables: &str) -> char {
+    match c {
+        'A'..'Z' => {
+            let pos = variables.chars().position(|d| d == c).unwrap();
+
+            match n & 1 << pos {
+                0 => '0',
+                _ => '1',
+            }
+        }
+        _ => c,
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -18,12 +90,16 @@ pub struct Node {
 
 impl Node {
     fn new(symbol: char) -> Self {
-        Self { symbol, left: None, right: None }
+        Self {
+            symbol,
+            left: None,
+            right: None,
+        }
     }
 
-    fn parse(formula: &str) -> Node {
+    pub fn parse(formula: &str) -> Node {
         let mut stack = Vec::new();
-        
+
         for c in formula.chars() {
             let mut node = Node::new(c);
 
@@ -54,7 +130,7 @@ impl Node {
         root
     }
 
-    fn formula(&self) -> String {
+    pub fn formula(&self) -> String {
         let mut formula = String::new();
 
         for node in [&self.left, &self.right] {
@@ -66,6 +142,18 @@ impl Node {
         formula.push(self.symbol);
 
         formula
+    }
+
+    fn is_nnf(&self) -> bool {
+        let mut nnf = match self.symbol { '&' | '|' => true, _ => false };
+
+        for node in [&self.left, &self.right] {
+            if let Some(node) = node {
+                nnf &= node.is_nnf();
+            }
+        }
+
+        nnf
     }
 
     fn evaluate(&self) -> bool {
@@ -105,7 +193,27 @@ impl Node {
             '^' => '⊕',
             '>' => '⇒',
             '=' => '⇔',
-            _ => unreachable!(),
+            c @ _ => c,
+        }
+    }
+
+    fn elim_dbl_neg(&mut self) {
+        eprintln!("self: {}", self.symbol());
+
+        if self.symbol == '!' {
+            let left = self.left.as_mut().unwrap();
+
+            if left.symbol == '!' {
+                let n: Box<Node> = left.left.clone().unwrap();
+
+                self.left = Some(n);
+            }
+        }
+        
+        for node in [&mut self.left, &mut self.right] {
+            if let Some(node) = node {
+                node.elim_dbl_neg();
+            }
         }
     }
 
@@ -133,7 +241,7 @@ impl Node {
 
             for node in nodes.iter() {
                 print!("{}", repeat(" ").take(spaces).collect::<String>());
-                
+
                 if let Some(node) = node {
                     print!("{}", node.symbol());
                 } else {
