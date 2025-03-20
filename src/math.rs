@@ -1,4 +1,4 @@
-fn adder(a: u32, b: u32) -> u32 {
+pub fn adder(a: u32, b: u32) -> u32 {
     let mut carry = a & b;
     let mut res = a ^ b;
 
@@ -12,7 +12,7 @@ fn adder(a: u32, b: u32) -> u32 {
     res
 }
 
-fn multiplier(a: u32, b: u32) -> u32 {
+pub fn multiplier(a: u32, b: u32) -> u32 {
     let mut res = 0;
 
     for i in 0..u32::BITS {
@@ -22,6 +22,10 @@ fn multiplier(a: u32, b: u32) -> u32 {
     }
 
     res
+}
+
+pub fn gray_code(n: u32) -> u32 {
+    n ^ (n >> 1)
 }
 
 #[cfg(test)]
@@ -54,6 +58,16 @@ mod tests {
             println!("{a}, {b}");
             assert!(a.wrapping_add(b) == adder(a, b));
             assert!(a.wrapping_mul(b) == multiplier(a, b));
+        }
+    }
+    
+    #[test]
+    fn gray() {
+        let results = [0, 1, 3, 2, 6, 7, 5, 4, 12];
+
+        for i in 0..9 {
+            println!("{i}, {}", gray_code(i));
+            assert!(gray_code(i) == results[i as usize]);
         }
     }
 }

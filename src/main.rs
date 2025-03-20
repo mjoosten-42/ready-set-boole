@@ -1,11 +1,9 @@
-mod math;
-mod gray;
-mod rpn;
+pub mod math;
+pub mod rpn;
 
-use std::fmt::Binary;
+use rpn::*;
 
-fn main() { }
-
-pub fn bin(s: &str, n: impl Binary) {
-    println!("{s:<6}: {n:032b}");
+fn main() {
+    println!("{:?}", eval_formula("1011||="));
 }
+
