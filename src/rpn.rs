@@ -5,15 +5,14 @@ pub fn eval_formula(formula: &str) -> bool {
 }
 
 pub fn print_truth_table(formula: &str) {
-
     
 }
 
 #[derive(Clone, Debug)]
 pub struct Node {
     symbol: char,
-    pub left: Option<Box<Node>>,
-    pub right: Option<Box<Node>>,
+    left: Option<Box<Node>>,
+    right: Option<Box<Node>>,
 }
 
 impl Node {
@@ -21,7 +20,7 @@ impl Node {
         Self { symbol, left: None, right: None }
     }
 
-    fn parse(formula: &str) -> Node {
+    pub fn parse(formula: &str) -> Node {
         let mut stack = Vec::new();
         
         for c in formula.chars() {
@@ -129,35 +128,22 @@ impl Node {
 
         while depth > 0 {
             depth -= 1;
-            let spaces = (1 << depth) - 1;
+            let spaces = repeat(" ").take((1 << depth) - 1).collect::<String>();
 
             for node in nodes.iter() {
-                print!("{}", repeat(" ").take(spaces).collect::<String>());
-                
-                if let Some(node) = node {
-                    print!("{}", node.symbol());
-                } else {
-                    print!("-");
-                }
-
-                print!("{}", repeat(" ").take(spaces).collect::<String>());
-                print!(" ");
+                print!("{spaces}{}{spaces} ", if let Some(node) = node { node.symbol() } else { ' '});
             }
 
-            println!("");
+            println!("\n");
 
             let mut new = Vec::new();
 
             for node in nodes {
-                if let Some(node) = node {
-                    new.push(node.left.clone().and_then(|b: Box<Node>| Some(*b)));
-                    new.push(node.right.clone().and_then(|b: Box<Node>| Some(*b)));
-                } else {
-                    new.push(None);
-                    new.push(None);
-                }
+                new.push(node.as_ref().and_then(|node| node.left.clone().and_then(|b| Some(*b))));
+                new.push(node.as_ref().and_then(|node| node.right.clone().and_then(|b| Some(*b))));
+
+                continue;
             }
-            println!("");
 
             nodes = new;
         }
