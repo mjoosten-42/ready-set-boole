@@ -1,14 +1,12 @@
-use rpn::*;
+use tree::*;
 
 pub mod math;
-pub mod rpn;
+pub mod tree;
 
 fn main() {
-    let formula = "1011||=";
-    let root = Node::parse(formula);
+    let formula = "AB&C|";
+    let tree: Tree = formula.parse().unwrap();
 
-    println!("{}", negation_normal_form("A!!0|"));
-    
-    root.print();
-    println!("{:?}", eval_formula("1011||="));
+    tree.print();
+    print_truth_table(formula);
 }
