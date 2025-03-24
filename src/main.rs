@@ -4,9 +4,13 @@ pub mod math;
 pub mod tree;
 
 fn main() {
-    let formula = "AB&C|";
-    let tree: Tree = formula.parse().unwrap();
+    let formula = "AB>";
+    let mut tree: Tree = formula.parse().unwrap();
 
     tree.print();
-    print_truth_table(formula);
+
+    println!("{}", negation_normal_form(formula));
+    
+    tree.to_nnf();
+    tree.print();
 }

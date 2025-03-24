@@ -3,10 +3,6 @@ use std::{fmt::Display, iter::repeat, ops::Deref, str::FromStr};
 use super::{node::Node, Tree};
 
 impl Tree {
-    fn formula(&self) -> String {
-        self.root.formula()
-    }
-
     pub fn print(&self) {
         let mut nodes: Vec<Option<&Node>> = vec![Some(self.root.deref())];
         let mut depth = self.root.depth();

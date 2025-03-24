@@ -1,3 +1,5 @@
+pub mod rewrite;
+
 #[derive(Clone, Debug)]
 pub struct Node {
     symbol: char,
@@ -34,6 +36,10 @@ impl Node {
 
     pub fn right(&self) -> Option<&Node> {
         self.right.as_deref()
+    }
+
+    pub fn take_left(&mut self) -> Box<Node> {
+        self.left.take().unwrap()
     }
 
     pub fn children(&self) -> impl Iterator<Item = &Node> {
