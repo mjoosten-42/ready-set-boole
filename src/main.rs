@@ -4,13 +4,14 @@ pub mod math;
 pub mod tree;
 
 fn main() {
-    let formula = "AB>";
+    let formula = "AB|!C!&";
     let mut tree: Tree = formula.parse().unwrap();
+    let table = tree.truth_table();
 
     tree.print();
-
-    println!("{}", negation_normal_form(formula));
-    
-    tree.to_nnf();
+    tree.to_cnf();
     tree.print();
+
+    assert_eq!(table, tree.truth_table());
+    assert!(tree.is_nnf());
 }

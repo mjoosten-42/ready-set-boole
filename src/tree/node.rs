@@ -8,14 +8,14 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn new(symbol: char, left: Option<Node>, right: Option<Node>) -> Self {
+    pub fn new(symbol: char, left: Option<Box<Node>>, right: Option<Box<Node>>) -> Self {
         Self {
             symbol,
-            left: left.map(|node| Box::new(node)),
-            right: right.map(|node| Box::new(node)),
+            left,
+            right,
         }
     }
-    
+
     pub fn symbol(&self) -> char {
         match self.symbol {
             '0' => '⊥',
@@ -30,20 +30,28 @@ impl Node {
         }
     }
 
-    pub fn left(&self) -> Option<&Node> {
-        self.left.as_deref()
+    pub fn left(&self) -> &Node {
+        self.left.as_deref().unwrap()
     }
 
-    pub fn right(&self) -> Option<&Node> {
-        self.right.as_deref()
-    }
-
-    pub fn take_left(&mut self) -> Box<Node> {
-        self.left.take().unwrap()
+    pub fn right(&self) -> &Node {
+        self.right.as_deref().unwrap()
     }
 
     pub fn children(&self) -> impl Iterator<Item = &Node> {
         self.left.as_deref().into_iter().chain(self.right.as_deref().into_iter())
+    }
+    
+    pub fn children_mut(&mut self) -> impl Iterator<Item = &mut Node> {
+        self.left.as_deref_mut().into_iter().chain(self.right.as_deref_mut().into_iter())
+    }
+    
+    pub fn foreach_mut(&mut self, f: fn(&mut Self)) {
+        f(self);
+
+        for child in self.children_mut() {
+            child.foreach_mut(f);
+        }
     }
 
     pub fn depth(&self) -> usize {
@@ -76,14 +84,14 @@ impl Node {
             _ => (),
         }
                 
-        let left = self.left().unwrap().evaluate(f);
+        let left = self.left().evaluate(f);
 
         match self.symbol {
             '!' => return !left,
             _ => (),
         }
 
-        let right = self.right().unwrap().evaluate(f);
+        let right = self.right().evaluate(f);
 
         match self.symbol {
             '&' => left & right,

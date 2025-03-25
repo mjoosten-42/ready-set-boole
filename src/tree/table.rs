@@ -11,6 +11,7 @@ impl Tree {
             .chars()
             .filter(char::is_ascii_uppercase)
             .unique()
+            .sorted()
             .rev()
             .collect();
 

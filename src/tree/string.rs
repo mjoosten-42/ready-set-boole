@@ -20,8 +20,25 @@ impl Tree {
             let mut new = Vec::new();
 
             for node in nodes {
-                new.push(node.as_ref().and_then(|node| node.left().clone()));
-                new.push(node.as_ref().and_then(|node| node.right().clone()));
+                if let Some(node) = node {
+                    match node.symbol() {
+                        'A'..='Z' | '0' | '1' => {
+                            new.push(None);
+                            new.push(None);
+                        }
+                        '¬' => {
+                            new.push(Some(node.left()));
+                            new.push(None);
+                        }
+                        _ => {
+                            new.push(Some(node.left()));
+                            new.push(Some(node.right()));
+                        }
+                    }
+                } else {
+                    new.push(None);
+                    new.push(None);
+                }
             }
 
             nodes = new;
@@ -44,10 +61,10 @@ impl FromStr for Tree {
         for c in formula.chars() {
             let node = match c {
                 'A'..='Z' | '0' | '1' => Node::new(c, None, None),
-                '!' => Node::new(c, Some(stack.pop().ok_or(())?), None),
+                '!' => Node::new(c, Some(Box::new(stack.pop().ok_or(())?)), None),
                 '&' | '|' | '^' | '>' | '=' => {
-                    let right = Some(stack.pop().ok_or(())?);
-                    let left = Some(stack.pop().ok_or(())?);
+                    let right = Some(Box::new(stack.pop().ok_or(())?));
+                    let left = Some(Box::new(stack.pop().ok_or(())?));
 
                     Node::new(c, left, right)
                 }

@@ -42,8 +42,29 @@ impl Tree {
     }
 
     pub fn to_nnf(&mut self) {
-        Node::to_nnf(&mut self.root);
+        self.root.to_nnf();
     }
+
+    pub fn to_cnf(&mut self) {
+        self.root.to_cnf();
+    }
+
+    pub fn is_nnf(&self) -> bool {
+        self.root.is_nnf()
+    }
+
+    pub fn is_cnf(&self) -> bool {
+        self.root.is_cnf()
+    }
+}
+
+impl Iterator for Tree {
+    type Item = Node;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        todo!()
+    }
+
 }
 
 #[cfg(test)]
@@ -51,12 +72,27 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test() {
+    fn eval() {
         compare("10&", false);
         compare("10|", true);
         compare("11>", true);
         compare("10=", false);
         compare("1011||=", true);
+    }
+
+    #[test]
+    fn nnf() {
+        compare_nnf("AB|!", "A!B!&");
+        compare_nnf("AB>", "A!B|");
+        compare_nnf("AB|C&!", "A!B!&C!|");
+    }
+
+    fn compare_nnf(formula: &str, answer: &str) {
+        let nnf = negation_normal_form(formula);
+
+        println!("{formula}: {nnf} - {answer}");
+
+        assert_eq!(nnf, answer);
     }
 
     fn compare(formula: &str, result: bool) {
