@@ -5,7 +5,7 @@ use super::{node::Node, Tree};
 impl Tree {
     pub fn print(&self) {
         let mut nodes: Vec<Option<&Node>> = vec![Some(self.root.deref())];
-        let mut depth = self.root.depth();
+        let mut depth = std::cmp::min(10, self.root.depth());
 
         // do while depth > 0
         loop {

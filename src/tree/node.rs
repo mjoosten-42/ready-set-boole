@@ -34,9 +34,18 @@ impl Node {
         self.left.as_deref().unwrap()
     }
 
+    pub fn left_mut(&mut self) -> &mut Node {
+        self.left.as_mut().unwrap()
+    }
+
     pub fn right(&self) -> &Node {
         self.right.as_deref().unwrap()
     }
+    
+    pub fn right_mut(&mut self) -> &mut Node {
+        self.right.as_mut().unwrap()
+    }
+
 
     pub fn children(&self) -> impl Iterator<Item = &Node> {
         self.left.as_deref().into_iter().chain(self.right.as_deref().into_iter())

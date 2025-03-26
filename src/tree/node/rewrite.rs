@@ -148,16 +148,31 @@ impl Node {
             self.right = Some(and);
         }
     }
+    
+    // Move conjunctions to the end of the formula
+    pub fn right_balance_conjunctions(&mut self) {
+        while self.symbol == '&' && self.left().symbol == '&' {
+            let mut left: Box<Node> = self.left.take().unwrap();
+            let right = left.right.take().unwrap();
+
+            mem::swap(self, &mut left);
+
+            left.left = Some(right);
+            self.right = Some(left);
+        }
+
+        if self.symbol == '&' {
+            self.right_mut().right_balance_conjunctions();
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use rand::seq::IndexedRandom;
-
-    use crate::Tree;
+    use crate::{formula, Tree};
 
     #[test]
-    fn rand() {
+    fn nnf() {
         let formula = formula(10);
 
         let mut tree: Tree = formula.parse().unwrap();
@@ -169,48 +184,23 @@ mod tests {
         assert!(tree.is_nnf());
     }
 
-    fn formula(len: usize) -> String {
-        let operands: Vec<char> = ('A'..='F').collect();
-        let unary_operators: Vec<char> = "!".chars().collect();
-        let binary_operators: Vec<char> = "&|^>=".chars().collect();
-        let operators: Vec<char> = "!&|^>=".chars().collect();
+    #[test]
+    fn cnf() {
+        let formula = formula(8);
 
-        let mut one: Vec<char> = operands.clone();
-        one.extend(unary_operators.clone());
+        let mut tree: Tree = formula.parse().unwrap();
 
-        let mut two: Vec<char> = operands.clone();
-        two.extend(unary_operators.clone());
-        two.extend(binary_operators.clone());
+        tree.print();
+        tree.to_cnf();
+        tree.print();
 
-        let mut formula = String::new();
-        let mut rng = rand::rng();
-        let mut score = 0;
+        assert!(tree.is_cnf());
 
-        for _ in 0..len {
-            let source = match score {
-                0 => &operands,
-                1 => &one,
-                _ => &two,
-            };
+        let formula = tree.formula();
 
-            let c = *source.choose(&mut rng).unwrap();
-            
-            score += match c { 'A'..='Z' => 1, '!' => 0, _ => -1 };
-
-            formula.push(c);
+        if let Some(index) = formula.chars().position(|c| c == '&') {
+            assert!(formula.chars().skip(index).all(|c| c == '&'));
         }
-
-        while score > 1 {
-            let c = *operators.choose(&mut rng).unwrap();
-            
-            score += match c { '!' => 0, _ => -1 };
-
-            formula.push(c);
-        }
-
-        println!("score: {score}");
-        println!("{formula}");
-        
-        formula
     }
+
 }

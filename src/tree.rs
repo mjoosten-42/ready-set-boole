@@ -23,6 +23,14 @@ pub fn negation_normal_form(formula: &str) -> String {
     tree.formula()
 }
 
+pub fn conjunctive_normal_form(formula: &str) -> String {
+    let mut tree: Tree = formula.parse().expect("Invalid formula");
+
+    tree.to_cnf();
+    tree.push_conjunctions();
+    tree.formula()
+}
+
 #[derive(Clone, Debug)]
 pub struct Tree {
     root: Box<Node>,
@@ -47,6 +55,10 @@ impl Tree {
 
     pub fn to_cnf(&mut self) {
         self.root.to_cnf();
+    }
+
+    pub fn push_conjunctions(&mut self) {
+        self.root.right_balance_conjunctions();
     }
 
     pub fn is_nnf(&self) -> bool {
