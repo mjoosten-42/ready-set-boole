@@ -5,8 +5,8 @@ pub mod math;
 pub mod tree;
 
 fn main() {
-    // let formula = formula(5);
-    let formula = "AB&CD&|";
+    // let formula = "AB&CD&|";
+    let formula = "PQ|R&S!>";
     let mut tree: Tree = formula.parse().unwrap();
     let table = tree.truth_table();
 
@@ -56,7 +56,6 @@ pub fn formula(len: usize) -> String {
         formula.push(c);
     }
 
-    println!("score: {score}");
     println!("{formula}");
     
     formula

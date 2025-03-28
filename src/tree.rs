@@ -70,15 +70,6 @@ impl Tree {
     }
 }
 
-impl Iterator for Tree {
-    type Item = Node;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        todo!()
-    }
-
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

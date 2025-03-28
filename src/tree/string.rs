@@ -1,6 +1,6 @@
 use std::{fmt::Display, iter::repeat, ops::Deref, str::FromStr};
 
-use super::{node::Node, Tree};
+use super::{node::{Node, clause::Clause}, Tree};
 
 impl Tree {
     pub fn print(&self) {
@@ -12,7 +12,7 @@ impl Tree {
             let spaces = repeat(" ").take((1 << depth) - 1).collect::<String>();
 
             for node in nodes.iter() {
-                print!("{spaces}{}{spaces} ", if let Some(node) = node { node.symbol() } else { ' '});
+                print!("{spaces}{}{spaces} ", if let Some(node) = node { node.clause().symbol() } else { ' '});
             }
 
             println!("\n");
@@ -21,12 +21,12 @@ impl Tree {
 
             for node in nodes {
                 if let Some(node) = node {
-                    match node.symbol() {
-                        'A'..='Z' | '0' | '1' => {
+                    match node.clause() {
+                        Clause::Value (_)| Clause::Variable(_) => {
                             new.push(None);
                             new.push(None);
                         }
-                        '¬' => {
+                        Clause::Negation => {
                             new.push(Some(node.left()));
                             new.push(None);
                         }
@@ -59,14 +59,16 @@ impl FromStr for Tree {
         let mut stack = Vec::new();
 
         for c in formula.chars() {
+            let clause = Clause::from(c);
+            
             let node = match c {
-                'A'..='Z' | '0' | '1' => Node::new(c, None, None),
-                '!' => Node::new(c, Some(Box::new(stack.pop().ok_or(())?)), None),
+                'A'..='Z' | '0' | '1' => Node::new(clause, None, None),
+                '!' => Node::new(clause, Some(Box::new(stack.pop().ok_or(())?)), None),
                 '&' | '|' | '^' | '>' | '=' => {
                     let right = Some(Box::new(stack.pop().ok_or(())?));
                     let left = Some(Box::new(stack.pop().ok_or(())?));
 
-                    Node::new(c, left, right)
+                    Node::new(clause, left, right)
                 }
                 _ => return Err(()),
             };

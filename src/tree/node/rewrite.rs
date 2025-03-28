@@ -24,33 +24,23 @@ impl Node {
     }
     
     pub fn is_nnf(&self) -> bool {
-        match self.symbol {
-            'A'..='Z' => true,
-            '!' => {
-                match self.left().symbol {
-                    'A'..='Z' => true,
+        match self.clause {
+            Clause::Value(_) | Clause::Variable(_) => true,
+            Clause::Negation => {
+                match self.left().clause {
+                    Clause::Variable(_) => true,
                     _ => false,
                 }
             }
-            '&' | '|' => self.left().is_nnf() && self.right().is_nnf(),
+            Clause::Conjunction | Clause::Disjunction => self.children().all(Node::is_nnf),
             _ => false,
         }
     }
 
     pub fn is_cnf(&self) -> bool {
-        match self.symbol {
-            'A'..='Z' => true,
-            '!' => {
-                match self.left().symbol {
-                    'A'..='Z' => true,
-                    _ => false,
-                }
-            }
-            '&' => self.left().is_cnf() && self.right().is_cnf(),
-            '|' => {
-                self.left().symbol != '&' && self.right().symbol != '&' && self.left().is_cnf() && self.right().is_cnf()
-            }
-            _ => false,
+        self.is_nnf() && self.children().all(Node::is_cnf) && match self.clause {
+            Clause::Disjunction => self.children().all(|node| node.clause != Clause::Conjunction),
+            _ => true,
         }
     }
     
@@ -63,68 +53,68 @@ impl Node {
 
     // (A ⇔ B) ⇔ ((A ⇒ B) ∧ (B ⇒ A))
     fn equivalence(&mut self) {
-        if self.symbol == '=' {
-            self.symbol = '&';
+        if self.clause == Clause::Equivalence {
+            self.clause = Clause::Conjunction;
 
             let left = self.left.take().unwrap();
             let right = self.right.take().unwrap();
 
-            self.left = Some(Box::new(Node::new('>', Some(left.clone()), Some(right.clone()))));
-            self.right = Some(Box::new(Node::new('>', Some(right), Some(left))));
+            self.left = Some(Box::new(Node::new(Clause::Material, Some(left.clone()), Some(right.clone()))));
+            self.right = Some(Box::new(Node::new(Clause::Material, Some(right), Some(left))));
         }
     }
 
     // (A ⇒ B) ⇔ (¬A ∨ B)
     pub fn material_conditions(&mut self) {
-        if self.symbol == '>' {
-            self.symbol = '|';
+        if self.clause == Clause::Material {
+            self.clause = Clause::Disjunction;
 
             let left = self.left.take().unwrap();
 
-            self.left = Some(Box::new(Node::new('!', Some(left), None)));
+            self.left = Some(Box::new(Node::new(Clause::Negation, Some(left), None)));
         }
     }
 
     // A ⊕ B ⇔ (A ∨ B) ∧ ¬(A ∧ B)
     fn exclusivity(&mut self) {
-        if self.symbol == '^' {
-            self.symbol = '&';
+        if self.clause == Clause::Exclusive {
+            self.clause = Clause::Conjunction;
 
             let left = self.left.take().unwrap();
             let right = self.right.take().unwrap();
 
-            self.left = Some(Box::new(Node::new('|', Some(left.clone()), Some(right.clone()))));
+            self.left = Some(Box::new(Node::new(Clause::Disjunction, Some(left.clone()), Some(right.clone()))));
 
-            let expr = Box::new(Node::new('&', Some(left), Some(right)));
+            let expr = Box::new(Node::new(Clause::Conjunction, Some(left), Some(right)));
 
-            self.right = Some(Box::new(Node::new('!', Some(expr), None)));
+            self.right = Some(Box::new(Node::new(Clause::Negation, Some(expr), None)));
         }
     }
 
     // ¬(A ∨ B) ⇔ (¬A ∧ ¬B)
     // ¬(A ∧ B) ⇔ (¬A ∨ ¬B)
     fn de_morgan(&mut self) {
-        if self.symbol == '!' {
+        if self.clause == Clause::Negation {
             let left = self.left.as_mut().unwrap();
          
-            if left.symbol == '|' || left.symbol == '&' {
+            if left.clause == Clause::Conjunction || left.clause == Clause::Disjunction {
                 let right: Box<Node> = left.right.take().unwrap();
 
-                self.symbol = match left.symbol {
-                    '|' => '&',
-                    '&' => '|',
+                self.right = Some(Box::new(Node::new(Clause::Negation, Some(right), None)));
+                self.clause = match left.clause {
+                    Clause::Conjunction => Clause::Disjunction,
+                    Clause::Disjunction => Clause::Conjunction,
                     _ => unreachable!(),
                 };
 
-                self.right = Some(Box::new(Node::new('!', Some(right), None)));
-                left.symbol = '!';
+                left.clause = Clause::Negation;
             }
         }
     }
 
     // (¬¬A) ⇔ A
     fn double_negation(&mut self) {
-        while self.symbol == '!' && self.left().symbol == '!' {
+        while self.clause == Clause::Negation && self.left().clause == Clause::Negation {
             let mut last = self.left.take().unwrap().left.take().unwrap();
 
             mem::swap(self, &mut last);
@@ -134,14 +124,14 @@ impl Node {
 
     // (A ∨ (B ∧ C)) ⇔ ((A ∨ B) ∧ (A ∨ C))
     fn distributivity(&mut self) {
-        if self.symbol == '|' && (self.left().symbol == '&' || self.right().symbol == '&') {
-            self.symbol = '&';
+        if self.clause == Clause::Disjunction && self.children().any(|node| node.clause == Clause::Conjunction) {
+            self.clause = Clause::Conjunction;
 
-            let mut and = match self.left().symbol { '&' => self.left.take(), _ => self.right.take() }.unwrap();
+            let mut and = match self.left().clause { Clause::Conjunction => self.left.take(), _ => self.right.take() }.unwrap();
             let other = match self.left { None => self.right.take(), _ => self.left.take() }.unwrap();
-            let expr = Box::new(Node::new('|', Some(other.clone()), Some(and.left.take().unwrap())));
+            let expr = Box::new(Node::new(Clause::Disjunction, Some(other.clone()), Some(and.left.take().unwrap())));
 
-            and.symbol = '|';
+            and.clause = Clause::Disjunction;
             and.left = Some(other);
 
             self.left = Some(expr);
@@ -151,7 +141,7 @@ impl Node {
     
     // Move conjunctions to the end of the formula
     pub fn right_balance_conjunctions(&mut self) {
-        while self.symbol == '&' && self.left().symbol == '&' {
+        while self.clause == Clause::Conjunction && self.left().clause == Clause::Conjunction {
             let mut left: Box<Node> = self.left.take().unwrap();
             let right = left.right.take().unwrap();
 
@@ -161,7 +151,7 @@ impl Node {
             self.right = Some(left);
         }
 
-        if self.symbol == '&' {
+        if self.clause == Clause::Conjunction {
             self.right_mut().right_balance_conjunctions();
         }
     }
@@ -171,9 +161,11 @@ impl Node {
 mod tests {
     use crate::{formula, Tree};
 
+    const SIZE: usize = 10;
+
     #[test]
     fn nnf() {
-        let formula = formula(10);
+        let formula = formula(SIZE);
 
         let mut tree: Tree = formula.parse().unwrap();
 
@@ -186,12 +178,13 @@ mod tests {
 
     #[test]
     fn cnf() {
-        let formula = formula(8);
+        let formula = formula(SIZE);
 
         let mut tree: Tree = formula.parse().unwrap();
 
         tree.print();
         tree.to_cnf();
+        tree.push_conjunctions();
         tree.print();
 
         assert!(tree.is_cnf());
