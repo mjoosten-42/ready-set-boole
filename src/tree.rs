@@ -31,6 +31,12 @@ pub fn conjunctive_normal_form(formula: &str) -> String {
     tree.formula()
 }
 
+pub fn sat(formula: &str) -> bool {
+    let tree: Tree = formula.parse().expect("Invalid formula");
+
+    tree.sat()
+}
+
 #[derive(Clone, Debug)]
 pub struct Tree {
     root: Box<Node>,

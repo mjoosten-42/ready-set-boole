@@ -5,16 +5,8 @@ use itertools::Itertools;
 
 impl Tree {
     pub fn truth_table(&self) -> String {
-        let formula = self.formula();
         let mut table = Vec::new();
-        let variables: String = formula
-            .chars()
-            .filter(char::is_ascii_uppercase)
-            .unique()
-            .sorted()
-            .rev()
-            .collect();
-
+        let variables: String = self.variables().chars().rev().collect();
         let columns = "|".repeat(variables.len() + 2);
         
         table.push(format!(
@@ -55,5 +47,40 @@ impl Tree {
 
         table.join("\n")
     }
+
+    pub fn sat(&self) -> bool {
+        let variables = self.variables();
+        let end = 1 << variables.len();
+
+        for i in 0..end {
+            let mapping = |c| match i & 1 << variables.chars().position(|d| d == c).unwrap() { 0 => false, _ => true };
+            
+            if self.evaluate_with(mapping) {
+                return true;
+            }
+        }
+
+        false
+    }
+    
+    pub fn variables(&self) -> String {
+        self.formula().chars()
+            .filter(char::is_ascii_uppercase)
+            .unique()
+            .sorted()
+            .collect()
+    }
 }
 
+#[cfg(test)]
+mod tests {
+    use crate::sat;
+
+    #[test]
+    fn test() {
+        assert_eq!(sat("AB|"), true);
+        assert_eq!(sat("AB&"), true);
+        assert_eq!(sat("AA!&"), false);
+        assert_eq!(sat("AA^"), false);
+    }
+}
