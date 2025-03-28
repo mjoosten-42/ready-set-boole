@@ -1,6 +1,9 @@
 use std::{fmt::Display, iter::repeat, ops::Deref, str::FromStr};
 
-use super::{node::{Node, clause::Clause}, Tree};
+use super::{
+    Tree,
+    node::{Node, clause::Clause},
+};
 
 impl Tree {
     pub fn print(&self) {
@@ -12,7 +15,14 @@ impl Tree {
             let spaces = repeat(" ").take((1 << depth) - 1).collect::<String>();
 
             for node in nodes.iter() {
-                print!("{spaces}{}{spaces} ", if let Some(node) = node { node.clause().symbol() } else { ' '});
+                print!(
+                    "{spaces}{}{spaces} ",
+                    if let Some(node) = node {
+                        node.clause().symbol()
+                    } else {
+                        ' '
+                    }
+                );
             }
 
             println!("\n");
@@ -22,7 +32,7 @@ impl Tree {
             for node in nodes {
                 if let Some(node) = node {
                     match node.clause() {
-                        Clause::Value (_)| Clause::Variable(_) => {
+                        Clause::Value(_) | Clause::Variable(_) => {
                             new.push(None);
                             new.push(None);
                         }
@@ -42,11 +52,11 @@ impl Tree {
             }
 
             nodes = new;
-            
+
             if depth == 0 {
                 break;
             }
-            
+
             depth -= 1;
         }
     }
@@ -60,7 +70,7 @@ impl FromStr for Tree {
 
         for c in formula.chars() {
             let clause = Clause::from(c);
-            
+
             let node = match c {
                 'A'..='Z' | '0' | '1' => Node::new(clause, None, None),
                 '!' => Node::new(clause, Some(Box::new(stack.pop().ok_or(())?)), None),

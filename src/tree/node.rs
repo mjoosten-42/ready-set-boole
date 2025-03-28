@@ -34,19 +34,25 @@ impl Node {
     pub fn right(&self) -> &Node {
         self.right.as_deref().unwrap()
     }
-    
+
     pub fn right_mut(&mut self) -> &mut Node {
         self.right.as_mut().unwrap()
     }
 
     pub fn children(&self) -> impl Iterator<Item = &Node> {
-        self.left.as_deref().into_iter().chain(self.right.as_deref().into_iter())
+        self.left
+            .as_deref()
+            .into_iter()
+            .chain(self.right.as_deref().into_iter())
     }
-    
+
     pub fn children_mut(&mut self) -> impl Iterator<Item = &mut Node> {
-        self.left.as_deref_mut().into_iter().chain(self.right.as_deref_mut().into_iter())
+        self.left
+            .as_deref_mut()
+            .into_iter()
+            .chain(self.right.as_deref_mut().into_iter())
     }
-    
+
     pub fn foreach_mut(&mut self, f: fn(&mut Self)) {
         f(self);
 
@@ -56,9 +62,12 @@ impl Node {
     }
 
     pub fn depth(&self) -> usize {
-        self.children().map(|node| node.depth() + 1).max().unwrap_or(0)
+        self.children()
+            .map(|node| node.depth() + 1)
+            .max()
+            .unwrap_or(0)
     }
-    
+
     pub fn formula(&self) -> String {
         let mut formula = String::new();
 
@@ -87,4 +96,3 @@ impl Node {
         }
     }
 }
-

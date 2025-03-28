@@ -1,13 +1,13 @@
 use rand::seq::IndexedRandom;
-use tree::*;
 use set::*;
+use tree::*;
 
-pub mod set;
 pub mod math;
+pub mod set;
 pub mod tree;
 
 fn main() {
-    let set = vec!(0, 1, 2);
+    let set = vec![0, 1, 2];
 
     println!("{set:?}");
 
@@ -39,21 +39,28 @@ pub fn formula(len: usize) -> String {
         };
 
         let c = *source.choose(&mut rng).unwrap();
-        
-        score += match c { 'A'..='Z' => 1, '!' => 0, _ => -1 };
+
+        score += match c {
+            'A'..='Z' => 1,
+            '!' => 0,
+            _ => -1,
+        };
 
         formula.push(c);
     }
 
     while score > 1 {
         let c = *operators.choose(&mut rng).unwrap();
-        
-        score += match c { '!' => 0, _ => -1 };
+
+        score += match c {
+            '!' => 0,
+            _ => -1,
+        };
 
         formula.push(c);
     }
 
     println!("{formula}");
-    
+
     formula
 }

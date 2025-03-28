@@ -28,7 +28,7 @@ impl Clause {
             _ => panic!("Invalid clause"),
         }
     }
-    
+
     pub fn to(&self) -> char {
         match *self {
             Self::Value(false) => '0',
@@ -42,7 +42,7 @@ impl Clause {
             Self::Equivalence => '=',
         }
     }
-    
+
     pub fn symbol(&self) -> char {
         match self {
             Self::Value(false) => '⊥',
@@ -57,4 +57,3 @@ impl Clause {
         }
     }
 }
-

@@ -22,28 +22,30 @@ impl Node {
             self.foreach_mut(Self::double_negation);
         }
     }
-    
+
     pub fn is_nnf(&self) -> bool {
         match self.clause {
             Clause::Value(_) | Clause::Variable(_) => true,
-            Clause::Negation => {
-                match self.left().clause {
-                    Clause::Variable(_) => true,
-                    _ => false,
-                }
-            }
+            Clause::Negation => match self.left().clause {
+                Clause::Variable(_) => true,
+                _ => false,
+            },
             Clause::Conjunction | Clause::Disjunction => self.children().all(Node::is_nnf),
             _ => false,
         }
     }
 
     pub fn is_cnf(&self) -> bool {
-        self.is_nnf() && self.children().all(Node::is_cnf) && match self.clause {
-            Clause::Disjunction => self.children().all(|node| node.clause != Clause::Conjunction),
-            _ => true,
-        }
+        self.is_nnf()
+            && self.children().all(Node::is_cnf)
+            && match self.clause {
+                Clause::Disjunction => self
+                    .children()
+                    .all(|node| node.clause != Clause::Conjunction),
+                _ => true,
+            }
     }
-    
+
     // Remove ⇔, ⇒ and ⊕
     pub fn simplify(&mut self) {
         self.foreach_mut(Self::equivalence);
@@ -59,8 +61,16 @@ impl Node {
             let left = self.left.take().unwrap();
             let right = self.right.take().unwrap();
 
-            self.left = Some(Box::new(Node::new(Clause::Material, Some(left.clone()), Some(right.clone()))));
-            self.right = Some(Box::new(Node::new(Clause::Material, Some(right), Some(left))));
+            self.left = Some(Box::new(Node::new(
+                Clause::Material,
+                Some(left.clone()),
+                Some(right.clone()),
+            )));
+            self.right = Some(Box::new(Node::new(
+                Clause::Material,
+                Some(right),
+                Some(left),
+            )));
         }
     }
 
@@ -83,7 +93,11 @@ impl Node {
             let left = self.left.take().unwrap();
             let right = self.right.take().unwrap();
 
-            self.left = Some(Box::new(Node::new(Clause::Disjunction, Some(left.clone()), Some(right.clone()))));
+            self.left = Some(Box::new(Node::new(
+                Clause::Disjunction,
+                Some(left.clone()),
+                Some(right.clone()),
+            )));
 
             let expr = Box::new(Node::new(Clause::Conjunction, Some(left), Some(right)));
 
@@ -96,7 +110,7 @@ impl Node {
     fn de_morgan(&mut self) {
         if self.clause == Clause::Negation {
             let left = self.left.as_mut().unwrap();
-         
+
             if left.clause == Clause::Conjunction || left.clause == Clause::Disjunction {
                 let right: Box<Node> = left.right.take().unwrap();
 
@@ -119,17 +133,32 @@ impl Node {
 
             mem::swap(self, &mut last);
         }
-
     }
 
     // (A ∨ (B ∧ C)) ⇔ ((A ∨ B) ∧ (A ∨ C))
     fn distributivity(&mut self) {
-        if self.clause == Clause::Disjunction && self.children().any(|node| node.clause == Clause::Conjunction) {
+        if self.clause == Clause::Disjunction
+            && self
+                .children()
+                .any(|node| node.clause == Clause::Conjunction)
+        {
             self.clause = Clause::Conjunction;
 
-            let mut and = match self.left().clause { Clause::Conjunction => self.left.take(), _ => self.right.take() }.unwrap();
-            let other = match self.left { None => self.right.take(), _ => self.left.take() }.unwrap();
-            let expr = Box::new(Node::new(Clause::Disjunction, Some(other.clone()), Some(and.left.take().unwrap())));
+            let mut and = match self.left().clause {
+                Clause::Conjunction => self.left.take(),
+                _ => self.right.take(),
+            }
+            .unwrap();
+            let other = match self.left {
+                None => self.right.take(),
+                _ => self.left.take(),
+            }
+            .unwrap();
+            let expr = Box::new(Node::new(
+                Clause::Disjunction,
+                Some(other.clone()),
+                Some(and.left.take().unwrap()),
+            ));
 
             and.clause = Clause::Disjunction;
             and.left = Some(other);
@@ -138,7 +167,7 @@ impl Node {
             self.right = Some(and);
         }
     }
-    
+
     // Move conjunctions to the end of the formula
     pub fn right_balance_conjunctions(&mut self) {
         while self.clause == Clause::Conjunction && self.left().clause == Clause::Conjunction {
@@ -159,7 +188,7 @@ impl Node {
 
 #[cfg(test)]
 mod tests {
-    use crate::{formula, Tree};
+    use crate::{Tree, formula};
 
     const SIZE: usize = 10;
 
@@ -195,5 +224,4 @@ mod tests {
             assert!(formula.chars().skip(index).all(|c| c == '&'));
         }
     }
-
 }

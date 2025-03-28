@@ -50,7 +50,7 @@ impl Tree {
     pub fn evaluate(&self) -> bool {
         self.root.evaluate(|_| panic!("Unsolved variables"))
     }
-    
+
     pub fn evaluate_with(&self, f: impl Fn(char) -> bool + Copy) -> bool {
         self.root.evaluate(f)
     }
