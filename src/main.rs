@@ -1,22 +1,19 @@
 use rand::seq::IndexedRandom;
 use tree::*;
+use set::*;
 
+pub mod set;
 pub mod math;
 pub mod tree;
 
 fn main() {
-    // let formula = "AB&CD&|";
-    let formula = "PQ|R&S!>";
-    let mut tree: Tree = formula.parse().unwrap();
-    let table = tree.truth_table();
+    let set = vec!(0, 1, 2);
 
-    tree.print();
-    tree.to_cnf();
-    tree.print();
-    println!("{tree}");
+    println!("{set:?}");
 
-    assert_eq!(table, tree.truth_table());
-    assert!(tree.is_cnf());
+    for sub in powerset(set) {
+        println!("\t{sub:?}");
+    }
 }
 
 pub fn formula(len: usize) -> String {
