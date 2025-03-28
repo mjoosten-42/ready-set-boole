@@ -1,19 +1,19 @@
 use rand::seq::IndexedRandom;
 use set::*;
-use tree::*;
 
 pub mod math;
 pub mod set;
 pub mod tree;
 
 fn main() {
-    let set = vec![0, 1, 2];
+    let sets = vec!(
+        vec!(0, 1, 2),
+        vec!(0, 3, 4),
+    );
+    
+    let result = eval_set("AB&", sets);
 
-    println!("{set:?}");
-
-    for sub in powerset(set) {
-        println!("\t{sub:?}");
-    }
+    assert_eq!(result, vec!(0));
 }
 
 pub fn formula(len: usize) -> String {

@@ -20,14 +20,22 @@ pub fn powerset(set: Vec<i32>) -> Vec<Vec<i32>> {
         .collect()
 }
 
+pub fn eval_set(formula: &str, sets: Vec<Vec<i32>>) -> Vec<i32> {
+    todo!()   
+}
+
 pub struct Set {
     elements: HashSet<i32>,
 }
 
 impl Set {
-    pub fn new(set: Vec<i32>) -> Self {
+    pub fn from(set: Vec<i32>) -> Self {
         Self {
             elements: HashSet::from_iter(set.into_iter()),
         }
+    }
+
+    pub fn to(self) -> Vec<i32> {
+        self.elements.into_iter().collect()
     }
 }
