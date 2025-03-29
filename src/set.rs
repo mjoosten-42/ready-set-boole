@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use std::collections::HashSet;
+use crate::tree::*;
 
 pub fn powerset(set: Vec<i32>) -> Vec<Vec<i32>> {
     let mut power = vec![Vec::new(), set.clone()];
@@ -21,21 +21,25 @@ pub fn powerset(set: Vec<i32>) -> Vec<Vec<i32>> {
 }
 
 pub fn eval_set(formula: &str, sets: Vec<Vec<i32>>) -> Vec<i32> {
-    todo!()   
+    let tree: Tree = formula.parse().unwrap();
+    let encompassing: Vec<i32> = sets.clone().into_iter().flatten().unique().collect();
+    let variables: String = formula.chars().filter(char::is_ascii_uppercase).collect();
+
+    tree.evaluate_sets(&encompassing, |c| sets[variables.chars().position(|d| d == c).unwrap()].clone())
 }
 
-pub struct Set {
-    elements: HashSet<i32>,
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-impl Set {
-    pub fn from(set: Vec<i32>) -> Self {
-        Self {
-            elements: HashSet::from_iter(set.into_iter()),
-        }
+    #[test]
+    fn test() {
+        compare("AB&", vec!(vec!(0, 1, 2), vec!(0, 3, 4)), vec!(0));
+        compare("AB|", vec!(vec!(0, 1, 2), vec!(3, 4, 5)), vec!(0, 1, 2, 3, 4, 5));
+        compare("A!", vec!(vec!(0, 1, 2)), vec!());
     }
 
-    pub fn to(self) -> Vec<i32> {
-        self.elements.into_iter().collect()
+    fn compare(formula: &str, sets: Vec<Vec<i32>>, res: Vec<i32>) {
+        assert_eq!(res, eval_set(formula, sets));
     }
 }

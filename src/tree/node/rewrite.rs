@@ -188,7 +188,7 @@ impl Node {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Tree, formula};
+    use crate::{tree::*, formula};
 
     const SIZE: usize = 10;
 

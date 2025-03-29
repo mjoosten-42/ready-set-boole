@@ -81,7 +81,7 @@ impl Tree {
 
 #[cfg(test)]
 mod tests {
-    use crate::sat;
+    use crate::tree::sat;
 
     #[test]
     fn test() {

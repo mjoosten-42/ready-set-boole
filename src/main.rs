@@ -13,6 +13,8 @@ fn main() {
     
     let result = eval_set("AB&", sets);
 
+    eprintln!("{result:?}");
+
     assert_eq!(result, vec!(0));
 }
 

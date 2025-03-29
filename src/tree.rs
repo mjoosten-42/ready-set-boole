@@ -55,6 +55,10 @@ impl Tree {
         self.root.evaluate(f)
     }
 
+    pub fn evaluate_sets(&self, all: &Vec<i32>, f: impl Copy + Fn(char) -> Vec<i32>) -> Vec<i32> {
+        self.root.evaluate_sets(all, f)
+    }
+
     pub fn to_nnf(&mut self) {
         self.root.to_nnf();
     }

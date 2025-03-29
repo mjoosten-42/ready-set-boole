@@ -1,6 +1,7 @@
 pub mod clause;
 pub mod rewrite;
 
+use itertools::Itertools;
 use clause::*;
 
 #[derive(Clone, Debug)]
@@ -93,6 +94,33 @@ impl Node {
             Clause::Exclusive => left() ^ right(),
             Clause::Material => !left() | right(),
             Clause::Equivalence => left() == right(),
+        }
+    }
+    
+    pub fn evaluate_sets(&self, encompassing: &Vec<i32>, f: impl Copy + Fn(char) -> Vec<i32>) -> Vec<i32> {
+        match self.clause {
+            Clause::Variable(v) => return f(v),
+            Clause::Value(_) => panic!(),
+            _ => (),
+        }
+
+        let left = self.left().evaluate_sets(encompassing, f);
+
+        match self.clause {
+            Clause::Negation => return encompassing.clone().into_iter().filter(|x| !left.contains(x)).collect(),
+            _ => (),
+        }
+
+        let right = self.right().evaluate_sets(encompassing, f);
+        let clone = right.clone();
+
+        match self.clause {
+            Clause::Conjunction => left.into_iter().filter(|x| right.contains(x)).collect(),
+            Clause::Disjunction => left.into_iter().chain(right.into_iter()).unique().collect(),
+            Clause::Exclusive => left.clone().into_iter().filter(move |x| !clone.clone().contains(x)).chain(right.into_iter().filter(|x| !left.contains(x))).collect(),
+            Clause::Material => encompassing.clone().into_iter().filter(|x| right.contains(x) || !left.contains(x)).unique().collect(),
+            Clause::Equivalence => encompassing.clone().into_iter().filter(|x| left.contains(x) == right.contains(x)).unique().collect(),
+            _ => unreachable!(),
         }
     }
 }
