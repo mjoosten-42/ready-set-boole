@@ -190,12 +190,27 @@ impl Node {
 mod tests {
     use crate::{tree::*, formula};
 
+    const N: usize = 10;
     const SIZE: usize = 10;
 
     #[test]
-    fn nnf() {
-        let formula = formula(SIZE);
+    fn explode() {
+        let formula = "ABCDEFGH=======";
 
+        cnf(formula);
+    }
+
+    #[test]
+    fn rand() {
+        for _ in 0..N {
+            let formula = formula(SIZE);
+
+            nnf(&formula);
+            cnf(&formula);
+        }
+    }
+
+    fn nnf(formula: &str) {
         let mut tree: Tree = formula.parse().unwrap();
 
         tree.print();
@@ -205,10 +220,7 @@ mod tests {
         assert!(tree.is_nnf());
     }
 
-    #[test]
-    fn cnf() {
-        let formula = formula(SIZE);
-
+    fn cnf(formula: &str) {
         let mut tree: Tree = formula.parse().unwrap();
 
         tree.print();
