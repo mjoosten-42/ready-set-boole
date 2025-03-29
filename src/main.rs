@@ -1,21 +1,14 @@
 use rand::seq::IndexedRandom;
-use set::*;
+use curve::*;
 
 pub mod math;
-pub mod set;
 pub mod tree;
+pub mod set;
+pub mod curve;
 
 fn main() {
-    let sets = vec!(
-        vec!(0, 1, 2),
-        vec!(0, 3, 4),
-    );
-    
-    let result = eval_set("AB&", sets);
-
-    eprintln!("{result:?}");
-
-    assert_eq!(result, vec!(0));
+    println!("{}", map(u16::MAX, 1 + u16::MAX / 2));
+    println!("{:?}", reverse_map(0.5));
 }
 
 pub fn formula(len: usize) -> String {
