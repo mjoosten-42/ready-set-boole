@@ -1,5 +1,6 @@
 use rand::seq::IndexedRandom;
 use tree::*;
+use curve::*;
 
 pub mod math;
 pub mod tree;
@@ -7,14 +8,9 @@ pub mod set;
 pub mod curve;
 
 fn main() {
-    let formula = "AB=CD==";
-    let mut tree: Tree = formula.parse().unwrap();
+    let f = map(u16::MAX, u16::MAX);
 
-    eprintln!("{formula}");
-
-    tree.print();
-    tree.to_cnf();
-    tree.print();
+    println!("{f}");
 }
 
 pub fn formula(len: usize) -> String {

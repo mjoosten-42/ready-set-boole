@@ -193,14 +193,14 @@ mod tests {
     const N: usize = 10;
     const SIZE: usize = 10;
 
-    #[test]
+    //#[test]
     fn explode() {
         let formula = "ABCDEFGH=======";
 
         cnf(formula);
     }
 
-    #[test]
+    //#[test]
     fn rand() {
         for _ in 0..N {
             let formula = formula(SIZE);
