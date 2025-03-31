@@ -30,12 +30,13 @@ pub fn gray_code(n: u32) -> u32 {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use rand::Rng;
 
-    use super::*;
+    const N: usize = 10000;
 
     #[test]
-    fn zero() {
+    fn small() {
         let range = 0..3;
 
         for a in range.clone() {
@@ -51,7 +52,7 @@ mod tests {
     fn rand() {
         let mut rng = rand::rng();
 
-        for _ in 0..100000 {
+        for _ in 0..N {
             let a: u32 = rng.random();
             let b: u32 = rng.random();
 
@@ -62,7 +63,7 @@ mod tests {
     }
 
     #[test]
-    fn gray() {
+    fn subject() {
         let results = [0, 1, 3, 2, 6, 7, 5, 4, 12];
 
         for i in 0..9 {

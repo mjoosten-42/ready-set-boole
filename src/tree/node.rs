@@ -1,8 +1,9 @@
 pub mod clause;
 pub mod rewrite;
 
-use itertools::Itertools;
 use clause::*;
+use itertools::Itertools;
+use std::iter::repeat;
 
 #[derive(Clone, Debug)]
 pub struct Node {
@@ -96,8 +97,12 @@ impl Node {
             Clause::Equivalence => left() == right(),
         }
     }
-    
-    pub fn evaluate_sets(&self, encompassing: &Vec<i32>, f: impl Copy + Fn(char) -> Vec<i32>) -> Vec<i32> {
+
+    pub fn evaluate_sets(
+        &self,
+        encompassing: &Vec<i32>,
+        f: impl Copy + Fn(char) -> Vec<i32>,
+    ) -> Vec<i32> {
         match self.clause {
             Clause::Variable(v) => return f(v),
             Clause::Value(_) => panic!(),
@@ -107,7 +112,13 @@ impl Node {
         let left = self.left().evaluate_sets(encompassing, f);
 
         match self.clause {
-            Clause::Negation => return encompassing.clone().into_iter().filter(|x| !left.contains(x)).collect(),
+            Clause::Negation => {
+                return encompassing
+                    .clone()
+                    .into_iter()
+                    .filter(|x| !left.contains(x))
+                    .collect();
+            }
             _ => (),
         }
 
@@ -117,10 +128,80 @@ impl Node {
         match self.clause {
             Clause::Conjunction => left.into_iter().filter(|x| right.contains(x)).collect(),
             Clause::Disjunction => left.into_iter().chain(right.into_iter()).unique().collect(),
-            Clause::Exclusive => left.clone().into_iter().filter(move |x| !clone.clone().contains(x)).chain(right.into_iter().filter(|x| !left.contains(x))).collect(),
-            Clause::Material => encompassing.clone().into_iter().filter(|x| right.contains(x) || !left.contains(x)).unique().collect(),
-            Clause::Equivalence => encompassing.clone().into_iter().filter(|x| left.contains(x) == right.contains(x)).unique().collect(),
+            Clause::Exclusive => left
+                .clone()
+                .into_iter()
+                .filter(move |x| !clone.clone().contains(x))
+                .chain(right.into_iter().filter(|x| !left.contains(x)))
+                .collect(),
+            Clause::Material => encompassing
+                .clone()
+                .into_iter()
+                .filter(|x| right.contains(x) || !left.contains(x))
+                .unique()
+                .collect(),
+            Clause::Equivalence => encompassing
+                .clone()
+                .into_iter()
+                .filter(|x| left.contains(x) == right.contains(x))
+                .unique()
+                .collect(),
             _ => unreachable!(),
+        }
+    }
+
+    pub fn print(&self) {
+        let mut nodes: Vec<Option<&Self>> = vec![Some(self)];
+        let mut depth = std::cmp::min(10, self.depth());
+
+        // do while depth > 0
+        loop {
+            let spaces = repeat(" ").take((1 << depth) - 1).collect::<String>();
+
+            for node in nodes.iter() {
+                print!(
+                    "{spaces}{}{spaces} ",
+                    if let Some(node) = node {
+                        node.clause().symbol()
+                    } else {
+                        ' '
+                    }
+                );
+            }
+
+            println!("\n");
+
+            let mut new = Vec::new();
+
+            for node in nodes {
+                if let Some(node) = node {
+                    match node.clause() {
+                        Clause::Value(_) | Clause::Variable(_) => {
+                            new.push(None);
+                            new.push(None);
+                        }
+                        Clause::Negation => {
+                            new.push(Some(node.left()));
+                            new.push(None);
+                        }
+                        _ => {
+                            new.push(Some(node.left()));
+                            new.push(Some(node.right()));
+                        }
+                    }
+                } else {
+                    new.push(None);
+                    new.push(None);
+                }
+            }
+
+            nodes = new;
+
+            if depth == 0 {
+                break;
+            }
+
+            depth -= 1;
         }
     }
 }

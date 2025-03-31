@@ -1,66 +1,9 @@
-use std::{fmt::Display, iter::repeat, ops::Deref, str::FromStr};
+use std::{fmt::Display, str::FromStr};
 
 use super::{
     Tree,
     node::{Node, clause::Clause},
 };
-
-impl Tree {
-    pub fn print(&self) {
-        let mut nodes: Vec<Option<&Node>> = vec![Some(self.root.deref())];
-        let mut depth = std::cmp::min(10, self.root.depth());
-
-        // do while depth > 0
-        loop {
-            let spaces = repeat(" ").take((1 << depth) - 1).collect::<String>();
-
-            for node in nodes.iter() {
-                print!(
-                    "{spaces}{}{spaces} ",
-                    if let Some(node) = node {
-                        node.clause().symbol()
-                    } else {
-                        ' '
-                    }
-                );
-            }
-
-            println!("\n");
-
-            let mut new = Vec::new();
-
-            for node in nodes {
-                if let Some(node) = node {
-                    match node.clause() {
-                        Clause::Value(_) | Clause::Variable(_) => {
-                            new.push(None);
-                            new.push(None);
-                        }
-                        Clause::Negation => {
-                            new.push(Some(node.left()));
-                            new.push(None);
-                        }
-                        _ => {
-                            new.push(Some(node.left()));
-                            new.push(Some(node.right()));
-                        }
-                    }
-                } else {
-                    new.push(None);
-                    new.push(None);
-                }
-            }
-
-            nodes = new;
-
-            if depth == 0 {
-                break;
-            }
-
-            depth -= 1;
-        }
-    }
-}
 
 impl FromStr for Tree {
     type Err = ();

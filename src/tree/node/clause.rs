@@ -29,8 +29,8 @@ impl Clause {
         }
     }
 
-    pub fn to(&self) -> char {
-        match *self {
+    pub fn to(self) -> char {
+        match self {
             Self::Value(false) => '0',
             Self::Value(true) => '1',
             Self::Variable(v) => v,
@@ -43,7 +43,7 @@ impl Clause {
         }
     }
 
-    pub fn symbol(&self) -> char {
+    pub fn symbol(self) -> char {
         match self {
             Self::Value(false) => '⊥',
             Self::Value(true) => '⊤',
@@ -54,6 +54,13 @@ impl Clause {
             Self::Material => '⇒',
             Self::Equivalence => '⇔',
             _ => self.to(),
+        }
+    }
+
+    pub fn is_operand(self) -> bool {
+        match self {
+            Self::Value(_) | Self::Variable(_) => true,
+            _ => false,
         }
     }
 }

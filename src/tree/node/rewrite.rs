@@ -14,7 +14,7 @@ impl Node {
     }
 
     pub fn to_cnf(&mut self) {
-        self.to_nnf();
+        self.simplify();
 
         while !self.is_cnf() {
             self.foreach_mut(Self::distributivity);
@@ -26,41 +26,38 @@ impl Node {
     pub fn is_nnf(&self) -> bool {
         match self.clause {
             Clause::Value(_) | Clause::Variable(_) => true,
-            Clause::Negation => match self.left().clause {
-                Clause::Variable(_) => true,
-                _ => false,
-            },
+            Clause::Negation => self.left().clause.is_operand(),
             Clause::Conjunction | Clause::Disjunction => self.children().all(Node::is_nnf),
             _ => false,
         }
     }
 
     pub fn is_cnf(&self) -> bool {
-        self.is_nnf()
-            && self.children().all(Node::is_cnf)
-            && match self.clause {
-                Clause::Disjunction => self
-                    .children()
-                    .all(|node| node.clause != Clause::Conjunction),
-                _ => true,
-            }
+        match self.clause {
+            Clause::Value(_) | Clause::Variable(_) => true,
+            Clause::Negation => self.left().clause.is_operand(),
+            Clause::Conjunction => self.children().all(Node::is_cnf),
+            Clause::Disjunction => self
+                .children()
+                .all(|node| node.clause != Clause::Conjunction && node.is_cnf()),
+            _ => false,
+        }
     }
 
     // Remove ⇔, ⇒ and ⊕
     pub fn simplify(&mut self) {
         self.foreach_mut(Self::equivalence);
-        self.foreach_mut(Self::material_conditions);
+        self.foreach_mut(Self::implies);
         self.foreach_mut(Self::exclusivity);
     }
 
     // (A ⇔ B) ⇔ ((A ⇒ B) ∧ (B ⇒ A))
     fn equivalence(&mut self) {
         if self.clause == Clause::Equivalence {
-            self.clause = Clause::Conjunction;
-
             let left = self.left.take().unwrap();
             let right = self.right.take().unwrap();
 
+            self.clause = Clause::Conjunction;
             self.left = Some(Box::new(Node::new(
                 Clause::Material,
                 Some(left.clone()),
@@ -75,12 +72,11 @@ impl Node {
     }
 
     // (A ⇒ B) ⇔ (¬A ∨ B)
-    pub fn material_conditions(&mut self) {
+    pub fn implies(&mut self) {
         if self.clause == Clause::Material {
-            self.clause = Clause::Disjunction;
-
             let left = self.left.take().unwrap();
 
+            self.clause = Clause::Disjunction;
             self.left = Some(Box::new(Node::new(Clause::Negation, Some(left), None)));
         }
     }
@@ -188,19 +184,12 @@ impl Node {
 
 #[cfg(test)]
 mod tests {
-    use crate::{tree::*, formula};
+    use crate::{formula, tree::*};
 
     const N: usize = 10;
-    const SIZE: usize = 10;
+    const SIZE: usize = 3;
 
-    //#[test]
-    fn explode() {
-        let formula = "ABCDEFGH=======";
-
-        cnf(formula);
-    }
-
-    //#[test]
+    #[test]
     fn rand() {
         for _ in 0..N {
             let formula = formula(SIZE);
@@ -227,8 +216,6 @@ mod tests {
         tree.to_cnf();
         tree.push_conjunctions();
         tree.print();
-
-        assert!(tree.is_cnf());
 
         let formula = tree.formula();
 

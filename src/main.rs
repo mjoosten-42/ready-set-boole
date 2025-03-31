@@ -1,17 +1,11 @@
 use rand::seq::IndexedRandom;
-use tree::*;
-use curve::*;
 
-pub mod math;
-pub mod tree;
-pub mod set;
 pub mod curve;
+pub mod math;
+pub mod set;
+pub mod tree;
 
-fn main() {
-    let f = map(u16::MAX, u16::MAX);
-
-    println!("{f}");
-}
+fn main() {}
 
 pub fn formula(len: usize) -> String {
     let operands: Vec<char> = ('A'..='F').collect();

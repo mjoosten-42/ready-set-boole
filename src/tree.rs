@@ -78,6 +78,10 @@ impl Tree {
     pub fn is_cnf(&self) -> bool {
         self.root.is_cnf()
     }
+
+    pub fn print(&self) {
+        self.root.print();
+    }
 }
 
 #[cfg(test)]
