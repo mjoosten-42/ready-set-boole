@@ -4,6 +4,7 @@ use std::mem;
 pub fn map(x: u16, y: u16) -> f64 {
     let mut z: u64 = 0;
 
+    // Interleave x and y
     for i in 0..u16::BITS {
         let a = (x & (1 << i)) as u64;
         let b = (y & (1 << i)) as u64;
@@ -46,7 +47,19 @@ mod tests {
             let x: u16 = rng.random();
             let y: u16 = rng.random();
 
-            assert_eq!(reverse_map(map(x, y)), (x, y));
+            let f = map(x, y);
+
+            assert!(f >= 0.0 && f <= 1.0);
+
+            eprintln!("{f}");
+
+            assert_eq!(reverse_map(f), (x, y));
         }
+    }
+
+    #[test]
+    fn minimax() {
+        assert_eq!(reverse_map(map(0, 0)), (0, 0));
+        assert_eq!(reverse_map(map(u16::MAX, u16::MAX)), (u16::MAX, u16::MAX));
     }
 }
