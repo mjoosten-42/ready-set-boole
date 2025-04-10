@@ -164,30 +164,40 @@ impl Node {
         }
     }
 
-    // Move conjunctions to the end of the formula
-    pub fn right_balance_conjunctions(&mut self) {
-        while self.clause == Clause::Conjunction && self.left().clause == Clause::Conjunction {
-            let mut left: Box<Node> = self.left.take().unwrap();
-            let right = left.right.take().unwrap();
-
-            mem::swap(self, &mut left);
-
-            left.left = Some(right);
-            self.right = Some(left);
+    // Move con- and disjunctions to the end of the formula,
+    // but keep conjunctions at the top
+    pub fn unbalance(&mut self) {
+        while self.children().count() == 2
+            && self.left().children().count() == 2
+            && self.clause >= self.left().clause
+        {
+            self.rotate_right();
         }
 
-        if self.clause == Clause::Conjunction {
-            self.right_mut().right_balance_conjunctions();
+        if self.children().count() == 2 {
+            self.right_mut().unbalance();
         }
+    }
+
+    fn rotate_right(&mut self) {
+        let mut left: Box<Node> = self.left.take().unwrap();
+        let right = left.right.take().unwrap();
+
+        mem::swap(self, &mut left);
+
+        left.left = Some(right);
+        self.right = Some(left);
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{formula, tree::*};
+    use rand::seq::IndexedRandom;
+
+    use crate::node::*;
 
     const N: usize = 10;
-    const SIZE: usize = 3;
+    const SIZE: usize = 5;
 
     #[test]
     fn rand() {
@@ -200,7 +210,7 @@ mod tests {
     }
 
     fn nnf(formula: &str) {
-        let mut tree: Tree = formula.parse().unwrap();
+        let mut tree: Node = formula.parse().unwrap();
 
         tree.print();
         tree.to_nnf();
@@ -210,17 +220,66 @@ mod tests {
     }
 
     fn cnf(formula: &str) {
-        let mut tree: Tree = formula.parse().unwrap();
+        let mut tree: Node = formula.parse().unwrap();
 
         tree.print();
         tree.to_cnf();
-        tree.push_conjunctions();
+        tree.unbalance();
         tree.print();
+
+        assert!(tree.is_cnf());
 
         let formula = tree.formula();
 
         if let Some(index) = formula.chars().position(|c| c == '&') {
             assert!(formula.chars().skip(index).all(|c| c == '&'));
         }
+    }
+
+    fn formula(len: usize) -> String {
+        let operands: Vec<char> = ('A'..='F').collect();
+        let unary_operators: Vec<char> = "!".chars().collect();
+        let operators: Vec<char> = "!&|^>=".chars().collect();
+
+        let mut one: Vec<char> = operands.clone();
+        one.extend(unary_operators.clone());
+
+        let mut two: Vec<char> = operands.clone();
+        two.extend(operators.clone());
+
+        let mut formula = String::new();
+        let mut rng = rand::rng();
+        let mut score = 0;
+
+        for _ in 0..len {
+            let source = match score {
+                0 => &operands,
+                1 => &one,
+                _ => &two,
+            };
+
+            let c = *source.choose(&mut rng).unwrap();
+
+            score += match c {
+                'A'..='Z' => 1,
+                '!' => 0,
+                _ => -1,
+            };
+
+            formula.push(c);
+        }
+
+        while score > 1 {
+            let c = *operators.choose(&mut rng).unwrap();
+
+            score += match c {
+                '!' => 0,
+                _ => -1,
+            };
+
+            formula.push(c);
+        }
+
+        formula
     }
 }

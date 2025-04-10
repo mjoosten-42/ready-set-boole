@@ -1,4 +1,4 @@
-use crate::tree::*;
+use crate::node::*;
 use itertools::Itertools;
 
 pub fn powerset(set: Vec<i32>) -> Vec<Vec<i32>> {
@@ -21,7 +21,7 @@ pub fn powerset(set: Vec<i32>) -> Vec<Vec<i32>> {
 }
 
 pub fn eval_set(formula: &str, sets: Vec<Vec<i32>>) -> Vec<i32> {
-    let tree: Tree = formula.parse().unwrap();
+    let tree: Node = formula.parse().unwrap();
     let encompassing: Vec<i32> = sets.clone().into_iter().flatten().unique().collect();
     let variables: String = formula.chars().filter(char::is_ascii_uppercase).collect();
 

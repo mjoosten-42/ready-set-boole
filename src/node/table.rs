@@ -1,9 +1,8 @@
-use super::Tree;
+use super::Node;
+use itertools::Itertools;
 use std::iter::once;
 
-use itertools::Itertools;
-
-impl Tree {
+impl Node {
     pub fn truth_table(&self) -> String {
         let mut table = Vec::new();
         let variables: String = self.variables().chars().rev().collect();
@@ -76,18 +75,5 @@ impl Tree {
             .unique()
             .sorted()
             .collect()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::tree::sat;
-
-    #[test]
-    fn test() {
-        assert_eq!(sat("AB|"), true);
-        assert_eq!(sat("AB&"), true);
-        assert_eq!(sat("AA!&"), false);
-        assert_eq!(sat("AA^"), false);
     }
 }

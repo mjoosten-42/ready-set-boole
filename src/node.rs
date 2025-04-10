@@ -1,9 +1,10 @@
 pub mod clause;
 pub mod rewrite;
+pub mod string;
+pub mod table;
 
 use clause::*;
 use itertools::Itertools;
-use std::iter::repeat;
 
 #[derive(Clone, Debug)]
 pub struct Node {
@@ -13,7 +14,7 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn new(clause: Clause, left: Option<Box<Node>>, right: Option<Box<Node>>) -> Self {
+    fn new(clause: Clause, left: Option<Box<Node>>, right: Option<Box<Node>>) -> Self {
         Self {
             clause,
             left,
@@ -21,41 +22,37 @@ impl Node {
         }
     }
 
-    pub fn clause(&self) -> Clause {
+    fn clause(&self) -> Clause {
         self.clause
     }
 
-    pub fn left(&self) -> &Node {
+    fn left(&self) -> &Node {
         self.left.as_deref().unwrap()
     }
 
-    pub fn _left_mut(&mut self) -> &mut Node {
-        self.left.as_mut().unwrap()
-    }
-
-    pub fn right(&self) -> &Node {
+    fn right(&self) -> &Node {
         self.right.as_deref().unwrap()
     }
 
-    pub fn right_mut(&mut self) -> &mut Node {
+    fn right_mut(&mut self) -> &mut Node {
         self.right.as_mut().unwrap()
     }
 
-    pub fn children(&self) -> impl Iterator<Item = &Node> {
+    fn children(&self) -> impl Iterator<Item = &Node> {
         self.left
             .as_deref()
             .into_iter()
             .chain(self.right.as_deref().into_iter())
     }
 
-    pub fn children_mut(&mut self) -> impl Iterator<Item = &mut Node> {
+    fn children_mut(&mut self) -> impl Iterator<Item = &mut Node> {
         self.left
             .as_deref_mut()
             .into_iter()
             .chain(self.right.as_deref_mut().into_iter())
     }
 
-    pub fn foreach_mut(&mut self, f: fn(&mut Self)) {
+    fn foreach_mut(&mut self, f: fn(&mut Self)) {
         f(self);
 
         for child in self.children_mut() {
@@ -63,7 +60,7 @@ impl Node {
         }
     }
 
-    pub fn depth(&self) -> usize {
+    fn depth(&self) -> usize {
         self.children()
             .map(|node| node.depth() + 1)
             .max()
@@ -82,9 +79,14 @@ impl Node {
         formula
     }
 
-    pub fn evaluate(&self, f: impl Fn(char) -> bool + Copy) -> bool {
-        let left = || self.left().evaluate(f);
-        let right = || self.right().evaluate(f);
+    // Assume only absolute values as operands
+    pub fn evaluate(&self) -> bool {
+        self.evaluate_with(|_| panic!("Unsolved variables"))
+    }
+
+    fn evaluate_with(&self, f: impl Fn(char) -> bool + Copy) -> bool {
+        let left = || self.left().evaluate_with(f);
+        let right = || self.right().evaluate_with(f);
 
         match self.clause {
             Clause::Variable(v) => return f(v),
@@ -147,61 +149,6 @@ impl Node {
                 .unique()
                 .collect(),
             _ => unreachable!(),
-        }
-    }
-
-    pub fn print(&self) {
-        let mut nodes: Vec<Option<&Self>> = vec![Some(self)];
-        let mut depth = std::cmp::min(10, self.depth());
-
-        // do while depth > 0
-        loop {
-            let spaces = repeat(" ").take((1 << depth) - 1).collect::<String>();
-
-            for node in nodes.iter() {
-                print!(
-                    "{spaces}{}{spaces} ",
-                    if let Some(node) = node {
-                        node.clause().symbol()
-                    } else {
-                        ' '
-                    }
-                );
-            }
-
-            println!("\n");
-
-            let mut new = Vec::new();
-
-            for node in nodes {
-                if let Some(node) = node {
-                    match node.clause() {
-                        Clause::Value(_) | Clause::Variable(_) => {
-                            new.push(None);
-                            new.push(None);
-                        }
-                        Clause::Negation => {
-                            new.push(Some(node.left()));
-                            new.push(None);
-                        }
-                        _ => {
-                            new.push(Some(node.left()));
-                            new.push(Some(node.right()));
-                        }
-                    }
-                } else {
-                    new.push(None);
-                    new.push(None);
-                }
-            }
-
-            nodes = new;
-
-            if depth == 0 {
-                break;
-            }
-
-            depth -= 1;
         }
     }
 }
