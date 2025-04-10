@@ -5,14 +5,7 @@ pub mod math;
 pub mod node;
 pub mod set;
 
-fn main() {
-    let formula = "AB=C=";
-    let mut tree: Node = formula.parse().unwrap();
-
-    tree.to_cnf();
-    tree.unbalance();
-    tree.print();
-}
+fn main() {}
 
 pub fn eval_formula(formula: &str) -> bool {
     formula.parse::<Node>().unwrap().evaluate()
