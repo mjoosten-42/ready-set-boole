@@ -85,6 +85,7 @@ impl Node {
     }
 
     fn evaluate_with(&self, f: impl Fn(char) -> bool + Copy) -> bool {
+        // Lazy evaluation
         let left = || self.left().evaluate_with(f);
         let right = || self.right().evaluate_with(f);
 
