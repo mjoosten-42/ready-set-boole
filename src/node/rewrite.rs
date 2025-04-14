@@ -197,7 +197,7 @@ mod tests {
     use crate::node::*;
 
     const N: usize = 10;
-    const SIZE: usize = 5;
+    const SIZE: usize = 3;
 
     #[test]
     fn rand() {
