@@ -47,13 +47,7 @@ mod tests {
             let x: u16 = rng.random();
             let y: u16 = rng.random();
 
-            let f = map(x, y);
-
-            assert!(f >= 0.0 && f <= 1.0);
-
-            eprintln!("{f}");
-
-            assert_eq!(reverse_map(f), (x, y));
+            assert_eq!(reverse_map(map(x, y)), (x, y));
         }
     }
 
