@@ -5,7 +5,7 @@ pub mod math;
 pub mod node;
 pub mod set;
 
-fn main() { }
+fn main() {}
 
 pub fn eval_formula(formula: &str) -> bool {
     formula.parse::<Node>().unwrap().evaluate()

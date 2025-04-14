@@ -46,14 +46,12 @@ mod tests {
         for _ in 0..N {
             let x: u16 = rng.random();
             let y: u16 = rng.random();
+            let f: f64 = rng.random_range(0.0..=1.0);
 
-            let f = map(x, y);
+            let (a, b) = reverse_map(f);
 
-            assert!(f >= 0.0 && f <= 1.0);
-
-            eprintln!("{f}");
-
-            assert_eq!(reverse_map(f), (x, y));
+            assert_eq!(reverse_map(map(x, y)), (x, y));
+            assert_eq!(map(a, b), f);
         }
     }
 
